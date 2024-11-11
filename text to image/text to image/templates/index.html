@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator</title>
+    <style>
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #222;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .image-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .image-container img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-container h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+        .image-container button {
+            background-color: #3498db;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .image-container button:hover {
+            background-color: #2980b9;
+        }
+
+        #error {
+            color: red;
+            margin-top: 20px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .image-container img {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Image Generator</h1>
+        <form id="imageForm">
+            <label for="text">Enter a descriptive prompt:</label>
+            <input type="text" id="text" name="text" placeholder="E.g. A realistic photo of a beach at sunset" required>
+            <button type="submit">Generate Image</button>
+        </form>
+
+        <div id="error">An error occurred. Please try again.</div>
+
+        <div class="image-container" id="imageContainer">
+            <h2>Generated Image</h2>
+            <img id="generatedImage" src="" alt="Generated Image">
+            <br>
+            <a id="downloadButton" href="#" download="generated_image.png">
+                <button type="button">Download Image</button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('imageForm');
+        const imageContainer = document.getElementById('imageContainer');
+        const generatedImage = document.getElementById('generatedImage');
+        const downloadButton = document.getElementById('downloadButton');
+        const errorDiv = document.getElementById('error');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const formData = new FormData(form);
+            const prompt = formData.get('text');
+
+            // Hide previous results and errors
+            imageContainer.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            // Send POST request to Flask backend
+            try {
+                const response = await fetch('/generate-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.image_url) {
+                    // Display the generated image
+                    generatedImage.src = data.image_url;
+                    imageContainer.style.display = 'block';
+
+                    // Update the download link with the image URL
+                    downloadButton.href = data.image_url;
+                } else if (data.error) {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                // Show error message
+                errorDiv.textContent = 'Error: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
